@@ -9,6 +9,9 @@ public class Id {
 
     public static Id parse(String str) {
         var arr = str.split(":");
+        if(arr.length != 2){
+            return new Id("null",arr[0]);
+        }
         return new Id(arr[0], arr[1]);
     }
 }

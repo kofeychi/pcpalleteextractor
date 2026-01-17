@@ -22,14 +22,14 @@ public class PalleteExtractor {
         return out;
     }
     public static PalletedImage extractPalletedImage(BufferedImage image){
-        var out = new PalletedImage(new Object2ObjectRBTreeMap<>());
+        var out = new PalletedImage(new Object2ObjectRBTreeMap<>(),image);
         var pallete = extractPallete(image);
         for (var c : pallete.colors()){
             out.palletes().put(c,new ObjectArrayList<>());
         }
         for(int y = 0; y < image.getHeight(); y++){
             for(int x = 0; x < image.getWidth(); x++){
-                var c = ARGBColor.ofOpaque(image.getRGB(x, y));
+                var c = ARGBColor.ofTransparent(image.getRGB(x, y));
                 out.palletes().get(c).add(new Vector2i(x,y));
             }
         }

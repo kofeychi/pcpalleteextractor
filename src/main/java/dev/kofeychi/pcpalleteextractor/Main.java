@@ -56,9 +56,6 @@ public class Main {
         String file = dialog.getFile();
         dialog.dispose();
         var model = parseModelFile(TexturePaths.MODEL.resolve(file));
-        if(!model.parent.path.contains("cube")) {
-            return selectModel();
-        }
         return model;
     }
     public static ParsedModelFile parseModelFile(Path path) throws Exception {
@@ -97,15 +94,25 @@ public class Main {
                     overlay.getFrame().repaint();
                 }
             };
+            final boolean[] draw = {false};
             overlay.getDrawPanel().addMouseListener(m);
             overlay.getDrawPanel().addMouseMotionListener(m);
-            overlay.getDrawPanel().on = grid::paint;
+            var side = new JComboBox<>(palletes.keySet().toArray(new String[0]));
+            side.addActionListener(e -> {
+                grid.recalc(palletes.get((String) side.getSelectedItem()).image());
+                overlay.getFrame().repaint();
+            });
+            var drawTexture = new JToggleButton("Toggle texture");
+            drawTexture.addActionListener(e -> {
+                draw[0] = !draw[0];
+                overlay.getFrame().repaint();
+            });
+            overlay.getDrawPanel().on = g -> grid.paint(g,palletes.get((String) side.getSelectedItem()),draw[0]);
             var fram = new JFrame();
             fram.setLayout(null);
             fram.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
             fram.setBounds(0, 0, 256, 256);
             var autopaint = new JButton("Autopaint");
-            var side = new JComboBox<>(palletes.keySet().toArray(new String[0]));
             autopaint.addActionListener(e -> {
                 overlay.setVisible(false);
                 fram.setVisible(false);
@@ -115,7 +122,9 @@ public class Main {
             });
             autopaint.setBounds(0, 0, 256, 64);
             side.setBounds(0, 64, 256, 64);
+            drawTexture.setBounds(0, 128, 256, 64);
             fram.add(autopaint);
+            fram.add(drawTexture);
             fram.add(side);
             fram.setVisible(true);
         });
