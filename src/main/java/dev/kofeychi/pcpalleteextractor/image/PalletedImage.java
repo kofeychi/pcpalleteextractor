@@ -7,5 +7,5 @@ import org.joml.Vector2i;
 
 import java.awt.image.BufferedImage;
 
-public record PalletedImage(Object2ObjectRBTreeMap<ARGBColor, ObjectArrayList<Vector2i>> palletes, BufferedImage image) {
+public record PalletedImage(Object2ObjectRBTreeMap<ARGBColor, ObjectArrayList<Vector2i>> palletes,Vector2i size) {
 }

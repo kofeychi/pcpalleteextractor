@@ -1,5 +1,6 @@
 package dev.kofeychi.pcpalleteextractor.image;
 
+import dev.kofeychi.pcpalleteextractor.ColorReducer;
 import dev.kofeychi.pcpalleteextractor.util.ARGBColor;
 import it.unimi.dsi.fastutil.objects.Object2ObjectRBTreeMap;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
@@ -22,7 +23,7 @@ public class PalleteExtractor {
         return out;
     }
     public static PalletedImage extractPalletedImage(BufferedImage image){
-        var out = new PalletedImage(new Object2ObjectRBTreeMap<>(),image);
+        var out = new PalletedImage(new Object2ObjectRBTreeMap<>(),new Vector2i(image.getWidth(),image.getHeight()));
         var pallete = extractPallete(image);
         for (var c : pallete.colors()){
             out.palletes().put(c,new ObjectArrayList<>());

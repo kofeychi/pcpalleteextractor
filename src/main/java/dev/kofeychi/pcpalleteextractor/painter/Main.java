@@ -1,31 +1,28 @@
-package dev.kofeychi.pcpalleteextractor;
+package dev.kofeychi.pcpalleteextractor.painter;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import dev.kofeychi.pcpalleteextractor.AutoPaint;
+import dev.kofeychi.pcpalleteextractor.TransformableGrid;
 import dev.kofeychi.pcpalleteextractor.image.PalletedImage;
 import dev.kofeychi.pcpalleteextractor.model.ModelFile;
 import dev.kofeychi.pcpalleteextractor.model.ParsedModelFile;
 import dev.kofeychi.pcpalleteextractor.util.*;
 import dev.kofeychi.pcpalleteextractor.image.PalleteExtractor;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
-import it.unimi.dsi.fastutil.objects.ObjectArrayList;
-import org.joml.Vector2f;
 import org.joml.Vector2i;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.InputEvent;
-import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
+import java.util.function.Predicate;
 
 public class Main {
     public static final Gson GSON = new GsonBuilder()
@@ -33,6 +30,7 @@ public class Main {
             .setPrettyPrinting()
             .setLenient()
             .create();
+    public static Predicate<AutoPaint.PaintingData> painting;
 
     public static void main(String[] args) throws Exception {
         TexturePaths.prepare();
@@ -94,12 +92,24 @@ public class Main {
                     overlay.getFrame().repaint();
                 }
             };
-            final boolean[] draw = {false};
+            final boolean[] draw = {false,true};
             overlay.getDrawPanel().addMouseListener(m);
             overlay.getDrawPanel().addMouseMotionListener(m);
-            var side = new JComboBox<>(palletes.keySet().toArray(new String[0]));
+            var side = new JComboBox<>(palletes.keySet().stream().sorted((a,b)->{
+                try {
+                    return Integer.compare(Integer.parseInt(a), Integer.parseInt(b));
+                } catch (NumberFormatException e) {
+                    return a.compareTo(b);
+                }
+            }).toArray(String[]::new));
+            var dots = new JToggleButton("dots");
+            dots.addActionListener(e -> {
+                draw[1] = !draw[1];
+                grid.dots = !draw[1];
+                overlay.getFrame().repaint();
+            });
             side.addActionListener(e -> {
-                grid.recalc(palletes.get((String) side.getSelectedItem()).image());
+                grid.recalc(palletes.get((String)side.getSelectedItem()).size());
                 overlay.getFrame().repaint();
             });
             var drawTexture = new JToggleButton("Toggle texture");
@@ -111,18 +121,30 @@ public class Main {
             var fram = new JFrame();
             fram.setLayout(null);
             fram.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-            fram.setBounds(0, 0, 256, 256);
+            fram.setBounds(0, 0, 256, 256*2+64);
             var autopaint = new JButton("Autopaint");
+            var place = new JButton("Place");
+            place.addActionListener(e -> {
+                overlay.setVisible(false);
+                fram.setVisible(false);
+                AutoPaint.autoPlace(palletes,(String) side.getSelectedItem(),grid,painting != null ? painting : a -> false);
+                overlay.setVisible(true);
+                fram.setVisible(true);
+            });
             autopaint.addActionListener(e -> {
                 overlay.setVisible(false);
                 fram.setVisible(false);
-                AutoPaint.autoPaint(palletes,(String) side.getSelectedItem(),grid);
+                AutoPaint.autoPaint(palletes,(String) side.getSelectedItem(),grid,painting != null ? painting : a -> false);
                 overlay.setVisible(true);
                 fram.setVisible(true);
             });
             autopaint.setBounds(0, 0, 256, 64);
             side.setBounds(0, 64, 256, 64);
             drawTexture.setBounds(0, 128, 256, 64);
+            dots.setBounds(0, 128+64, 256, 64);
+            place.setBounds(0, 256, 256, 64);
+            fram.add(place);
+            fram.add(dots);
             fram.add(autopaint);
             fram.add(drawTexture);
             fram.add(side);

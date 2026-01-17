@@ -20,6 +20,7 @@ public class TransformableGrid {
     public int draggedCornerIndex = -1;
     public int HANDLE_SIZE = 12;
     public Point[] corners;
+    public boolean dots = true;
 
     public Object2ObjectOpenHashMap<Vector2i, Vector2f> cached = new Object2ObjectOpenHashMap<>();
 
@@ -96,24 +97,25 @@ public class TransformableGrid {
                 }
             }
         }
+        if(!dots) {
+            // 1. Рисуем сетку точек
+            g2d.setColor(new Color(0, 180, 255));
+            for (int i = 0; i < grid_dimensions.x; i++) {
+                for (int j = 0; j < grid_dimensions.y; j++) {
+                    var pos = cached.get(new Vector2i(i, j));
 
-        // 1. Рисуем сетку точек
-        g2d.setColor(new Color(0, 180, 255));
-        for (int i = 0; i < grid_dimensions.x; i++) {
-            for (int j = 0; j < grid_dimensions.y; j++) {
-                var pos = cached.get(new Vector2i(i, j));
-
-                int dotSize = 4;
-                g2d.fill(new Ellipse2D.Float(pos.x - dotSize/2f, pos.y - dotSize/2f, dotSize, dotSize));
+                    int dotSize = 4;
+                    g2d.fill(new Ellipse2D.Float(pos.x - dotSize / 2f, pos.y - dotSize / 2f, dotSize, dotSize));
+                }
             }
-        }
 
-        // 2. Рисуем соединительные линии (рамку)
-        g2d.setColor(new Color(255, 255, 255, 100));
-        for (int i = 0; i < 4; i++) {
-            Point p1 = corners[i];
-            Point p2 = corners[(i + 1) % 4];
-            g2d.drawLine(p1.x, p1.y, p2.x, p2.y);
+            // 2. Рисуем соединительные линии (рамку)
+            g2d.setColor(new Color(255, 255, 255, 100));
+            for (int i = 0; i < 4; i++) {
+                Point p1 = corners[i];
+                Point p2 = corners[(i + 1) % 4];
+                g2d.drawLine(p1.x, p1.y, p2.x, p2.y);
+            }
         }
 
         // 3. Рисуем интерактивные ручки (углы)
@@ -152,9 +154,9 @@ public class TransformableGrid {
         g2d.draw(path);
     }
 
-    public void recalc(BufferedImage img) {
-        grid_dimensions.x = img.getWidth();
-        grid_dimensions.y = img.getHeight();
+    public void recalc(Vector2i img) {
+        grid_dimensions.x = img.x;
+        grid_dimensions.y = img.y;
         recalculatePoints();
     }
 

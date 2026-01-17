@@ -1,12 +1,15 @@
 package dev.kofeychi.pcpalleteextractor;
 
 import dev.kofeychi.pcpalleteextractor.image.PalletedImage;
+import dev.kofeychi.pcpalleteextractor.util.ARGBColor;
 import org.joml.Vector2f;
+import org.joml.Vector2i;
 
 import java.awt.*;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
 import java.util.HashMap;
+import java.util.function.Predicate;
 
 public class AutoPaint {
     public static void click(Vector2f pos) throws Exception {
@@ -32,14 +35,14 @@ public class AutoPaint {
             bot.keyRelease(KeyEvent.VK_BACK_SPACE);
             Thread.sleep(10);
         }
-        for (char ch : str.toCharArray()) {
+        for (Character ch : str.toCharArray()) {
             bot.keyPress(KeyEvent.getExtendedKeyCodeForChar(ch));
             Thread.sleep(10);
             bot.keyRelease(KeyEvent.getExtendedKeyCodeForChar(ch));
             Thread.sleep(10);
         }
     }
-    public static void autoPaint(HashMap<String, PalletedImage> palletes,String side, TransformableGrid grid) {
+    public static void autoPaint(HashMap<String, PalletedImage> palletes, String side, TransformableGrid grid, Predicate<PaintingData> shouldPaint) {
         for (var pallete : palletes.get((String) side).palletes().keySet()) {
             for (int i = 0; i < 3; i++) {
                 try {
@@ -56,8 +59,28 @@ public class AutoPaint {
             }
             for (var pos : palletes.get((String) side).palletes().get(pallete)) {
                 try {
-                    click(grid.cached.get(pos));
-                    Thread.sleep(100);
+                    if(!shouldPaint.test(new PaintingData(pallete,pos))) {
+                        click(grid.cached.get(pos));
+                        Thread.sleep(10);
+                    }
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+            }
+            try {
+                Thread.sleep(10);
+            } catch (InterruptedException ex) {
+            }
+        }
+    }
+    public static void autoPlace(HashMap<String, PalletedImage> palletes, String side, TransformableGrid grid, Predicate<PaintingData> shouldPaint) {
+        for (var pallete : palletes.get((String) side).palletes().keySet()) {
+            for (var pos : palletes.get((String) side).palletes().get(pallete)) {
+                try {
+                    if(!shouldPaint.test(new PaintingData(pallete,pos))) {
+                        click(grid.cached.get(pos));
+                        Thread.sleep(100);
+                    }
                 } catch (Exception ex) {
                     ex.printStackTrace();
                 }
@@ -68,4 +91,5 @@ public class AutoPaint {
             }
         }
     }
+    public record PaintingData(ARGBColor color, Vector2i pos) {}
 }
