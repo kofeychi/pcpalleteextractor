@@ -42,35 +42,25 @@ public class AutoPaint {
             Thread.sleep(10);
         }
     }
-    public static void autoPaint(HashMap<String, PalletedImage> palletes, String side, TransformableGrid grid, Predicate<PaintingData> shouldPaint) {
+    public static void autoPaint(HashMap<String, PalletedImage> palletes, String side, TransformableGrid grid) throws Exception{
         for (var pallete : palletes.get((String) side).palletes().keySet()) {
-            for (int i = 0; i < 3; i++) {
-                try {
-                    click(new Vector2f(102,703));
-                    Thread.sleep(10);
-                } catch (Exception ex) {
-                    ex.printStackTrace();
-                }
-            }
-            try {
-                type(String.format("#%06X", (0xFFFFFF & pallete.getColor())),new Vector2f(102,703));
-            } catch (Exception ex) {
-                ex.printStackTrace();
-            }
-            for (var pos : palletes.get((String) side).palletes().get(pallete)) {
-                try {
-                    if(!shouldPaint.test(new PaintingData(pallete,pos))) {
-                        click(grid.cached.get(pos));
-                        Thread.sleep(10);
-                    }
-                } catch (Exception ex) {
-                    ex.printStackTrace();
-                }
-            }
-            try {
+            for (int i = 0; i < 4; i++) {
+                click(new Vector2f(102,703));
                 Thread.sleep(10);
-            } catch (InterruptedException ex) {
             }
+            for (int i = 0; i < 8; i++) {
+                Robot bot = new Robot();
+                bot.keyPress(KeyEvent.VK_RIGHT);
+                Thread.sleep(10);
+                bot.keyRelease(KeyEvent.VK_RIGHT);
+                Thread.sleep(10);
+            }
+            type(String.format("#%06X", (0xFFFFFF & pallete.getColor())),new Vector2f(102,703));
+            for (var pos : palletes.get((String) side).palletes().get(pallete)) {
+                click(grid.cached.get(pos));
+                Thread.sleep(10);
+            }
+            Thread.sleep(10);
         }
     }
     public static void autoPlace(HashMap<String, PalletedImage> palletes, String side, TransformableGrid grid, Predicate<PaintingData> shouldPaint) {

@@ -21,6 +21,7 @@ public class TransformableGrid {
     public int HANDLE_SIZE = 12;
     public Point[] corners;
     public boolean dots = true;
+    public boolean cells = true;
 
     public Object2ObjectOpenHashMap<Vector2i, Vector2f> cached = new Object2ObjectOpenHashMap<>();
 
@@ -147,10 +148,12 @@ public class TransformableGrid {
         path.closePath();
 
         g2d.setColor(color);
-        g2d.fill(path);
+        if(cells) {
+            g2d.fill(path);
+        }
 
         // Опционально: обводка ячейки
-        g2d.setColor(new Color(255, 255, 255, 50));
+        g2d.setColor(new Color(255, 0, 0, 255));
         g2d.draw(path);
     }
 

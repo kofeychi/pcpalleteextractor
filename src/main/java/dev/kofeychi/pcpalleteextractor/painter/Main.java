@@ -1,5 +1,10 @@
 package dev.kofeychi.pcpalleteextractor.painter;
 
+import com.github.kwhat.jnativehook.GlobalScreen;
+import com.github.kwhat.jnativehook.NativeHookException;
+import com.github.kwhat.jnativehook.dispatcher.SwingDispatchService;
+import com.github.kwhat.jnativehook.keyboard.NativeKeyEvent;
+import com.github.kwhat.jnativehook.keyboard.NativeKeyListener;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import dev.kofeychi.pcpalleteextractor.AutoPaint;
@@ -15,6 +20,7 @@ import org.joml.Vector2i;
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.geom.Rectangle2D;
@@ -68,6 +74,30 @@ public class Main {
     }
 
     public static void gui(HashMap<String,PalletedImage> palletes) {
+        try {
+            GlobalScreen.registerNativeHook();
+            System.out.println("Native Hook Registered");
+            GlobalScreen.addNativeKeyListener(new NativeKeyListener() {
+                @Override
+                public void nativeKeyReleased(NativeKeyEvent nativeEvent) {
+                    if(nativeEvent.getKeyCode() == 57420) {
+                        System.exit(0);
+                        try {
+                            GlobalScreen.unregisterNativeHook();
+                        } catch (NativeHookException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }
+            });
+        }
+        catch (NativeHookException ex) {
+            System.err.println("There was a problem registering the native hook.");
+            System.err.println(ex.getMessage());
+
+            System.exit(1);
+        }
+
         SwingUtilities.invokeLater(() -> {
             var overlay = new ScreenOverlay();
             overlay.setVisible(true);
@@ -92,7 +122,7 @@ public class Main {
                     overlay.getFrame().repaint();
                 }
             };
-            final boolean[] draw = {false,true};
+            final boolean[] draw = {false,true,true};
             overlay.getDrawPanel().addMouseListener(m);
             overlay.getDrawPanel().addMouseMotionListener(m);
             var side = new JComboBox<>(palletes.keySet().stream().sorted((a,b)->{
@@ -124,6 +154,12 @@ public class Main {
             fram.setBounds(0, 0, 256, 256*2+64);
             var autopaint = new JButton("Autopaint");
             var place = new JButton("Place");
+            var cells = new JToggleButton("cells");
+            cells.addActionListener(e -> {
+                grid.cells = draw[2];
+                draw[2] = !draw[2];
+                overlay.getFrame().repaint();
+            });
             place.addActionListener(e -> {
                 overlay.setVisible(false);
                 fram.setVisible(false);
@@ -134,7 +170,11 @@ public class Main {
             autopaint.addActionListener(e -> {
                 overlay.setVisible(false);
                 fram.setVisible(false);
-                AutoPaint.autoPaint(palletes,(String) side.getSelectedItem(),grid,painting != null ? painting : a -> false);
+                try {
+                    AutoPaint.autoPaint(palletes,(String) side.getSelectedItem(),grid);
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
                 overlay.setVisible(true);
                 fram.setVisible(true);
             });
@@ -143,12 +183,21 @@ public class Main {
             drawTexture.setBounds(0, 128, 256, 64);
             dots.setBounds(0, 128+64, 256, 64);
             place.setBounds(0, 256, 256, 64);
+            cells.setBounds(0, 256+64, 256, 64);
             fram.add(place);
             fram.add(dots);
             fram.add(autopaint);
             fram.add(drawTexture);
             fram.add(side);
+            fram.add(cells);
             fram.setVisible(true);
         });
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            try {
+                GlobalScreen.unregisterNativeHook();
+            } catch (NativeHookException e) {
+                e.printStackTrace();
+            }
+        }));
     }
 }
